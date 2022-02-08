@@ -608,6 +608,11 @@ impl Prioritize {
             return true;
         }
 
+        if eos {
+            let stream = store.resolve(key);
+            stream.notify_send_complete();
+        }
+
         false
     }
 

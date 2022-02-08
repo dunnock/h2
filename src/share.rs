@@ -1,6 +1,6 @@
 use crate::codec::UserError;
 use crate::frame::Reason;
-use crate::proto::{self, WindowSize};
+use crate::proto::{self, Completion, WindowSize};
 
 use bytes::{Buf, Bytes};
 use http::HeaderMap;
@@ -374,6 +374,15 @@ impl<B: Buf> SendStream<B> {
     /// If the lock on the stream store has been poisoned.
     pub fn stream_id(&self) -> StreamId {
         StreamId::from_internal(self.inner.stream_id())
+    }
+
+    /// Get Completion Future which will be resolved when all
+    /// send tasks will be completed with final task marked as end_of_stream
+    ///
+    /// It's only possible to acquire completion future once, otherwise empty error will be
+    /// returned
+    pub fn acquire_send_complete(&mut self) -> Result<Completion, ()> {
+        self.inner.acquire_send_complete()
     }
 }
 

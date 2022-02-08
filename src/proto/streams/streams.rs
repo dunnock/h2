@@ -1,3 +1,4 @@
+use super::complete_future::Completion;
 use super::recv::RecvHeaderBlockError;
 use super::store::{self, Entry, Resolve, Store};
 use super::{Buffer, Config, Counts, Prioritized, Recv, Send, Stream, StreamId};
@@ -1239,6 +1240,15 @@ impl<B> StreamRef<B> {
 
     pub fn stream_id(&self) -> StreamId {
         self.opaque.stream_id()
+    }
+
+    /// Get Completion Future which will be resolved when all
+    /// send tasks will be completed with final task marked as end_of_stream
+    pub fn acquire_send_complete(&self) -> Result<Completion, ()> {
+        let mut me = self.opaque.inner.lock().unwrap();
+        let me = &mut *me;
+        let mut stream = me.store.resolve(self.opaque.key);
+        stream.acquire_send_complete()
     }
 }
 

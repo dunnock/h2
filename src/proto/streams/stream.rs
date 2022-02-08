@@ -1,3 +1,4 @@
+use super::complete_future::{CompleteHandle, Completion};
 use super::*;
 
 use std::task::{Context, Waker};
@@ -107,6 +108,9 @@ pub(super) struct Stream {
 
     /// Validate content-length headers
     pub content_length: ContentLength,
+
+    /// Future which resolves when stream sent final frame
+    pub send_complete: Option<CompleteHandle>,
 }
 
 /// State related to validating a stream's content-length
@@ -183,6 +187,7 @@ impl Stream {
             recv_task: None,
             pending_push_promises: store::Queue::new(),
             content_length: ContentLength::Omitted,
+            send_complete: None,
         }
     }
 
@@ -328,6 +333,27 @@ impl Stream {
     pub fn notify_recv(&mut self) {
         if let Some(task) = self.recv_task.take() {
             task.wake();
+        }
+    }
+
+    pub fn notify_send_complete(&self) {
+        if let Some(handle) = &self.send_complete {
+            handle.resolve()
+        }
+    }
+
+    /// Get Completion Future which will be resolved when all
+    /// send tasks will be completed with final task marked as end_of_stream
+    ///
+    /// It's only possible to acquire completion future once, otherwise empty error will be
+    /// returned
+    pub fn acquire_send_complete(&mut self) -> Result<Completion, ()> {
+        if self.send_complete.is_none() {
+            let (handle, completion) = CompleteHandle::new_pair();
+            self.send_complete = Some(handle);
+            Ok(completion)
+        } else {
+            Err(())
         }
     }
 }

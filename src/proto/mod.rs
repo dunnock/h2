@@ -12,6 +12,7 @@ pub(crate) use self::peer::{Dyn as DynPeer, Peer};
 pub(crate) use self::ping_pong::UserPings;
 pub(crate) use self::streams::{DynStreams, OpaqueStreamRef, StreamRef, Streams};
 pub(crate) use self::streams::{Open, PollReset, Prioritized};
+pub use self::streams::Completion;
 
 use crate::codec::Codec;
 
